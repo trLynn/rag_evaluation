@@ -1,6 +1,5 @@
 # Ignore everything in the data folder...
-data/raw/*
-data/processed/*
+docs
 
 # Python cache/artifacts
 __pycache__/
