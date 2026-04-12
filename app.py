@@ -13,7 +13,7 @@ from src.retrieval import answer_question
 st.set_page_config(page_title="RAG Chatbot", page_icon="✨", layout="wide")
 
 st.title("✨ Ollama RAG Chatbot")
-st.caption("Ingest local .txt files and chat with your knowledge base.")
+st.caption("Ingest local files and chat with your knowledge base.")
 
 with st.sidebar:
     st.header("Settings")
@@ -25,21 +25,37 @@ with st.sidebar:
 
 st.subheader("1) Ingest documents")
 uploaded_files = st.file_uploader(
-    "Upload one or more UTF-8 text files",
-    type=["txt"],
+    "Upload one or more files",
     accept_multiple_files=True,
 )
 
+
+def _next_available_filename(target_dir: Path, original_name: str) -> Path:
+    """Return a non-colliding file path for uploaded files."""
+    safe_name = Path(original_name).name or "upload.bin"
+    candidate = target_dir / safe_name
+    if not candidate.exists():
+        return candidate
+
+    stem = Path(safe_name).stem or "upload"
+    suffix = Path(safe_name).suffix
+    counter = 1
+    while True:
+        candidate = target_dir / f"{stem}_{counter}{suffix}"
+        if not candidate.exists():
+            return candidate
+        counter += 1
+
 if st.button("Ingest uploaded files", type="primary"):
     if not uploaded_files:
-        st.warning("Please upload at least one .txt file.")
+        st.warning("Please upload at least one file.")
     else:
         docs_dir = Path("docs")
         docs_dir.mkdir(parents=True, exist_ok=True)
 
         saved_paths: list[str] = []
         for uploaded_file in uploaded_files:
-            file_path = docs_dir / uploaded_file.name
+            file_path = _next_available_filename(docs_dir, uploaded_file.name)
             file_path.write_bytes(uploaded_file.getbuffer())
             saved_paths.append(str(file_path))
 
@@ -51,9 +67,7 @@ if st.button("Ingest uploaded files", type="primary"):
                 embedding_model=embedding_model,
             )
 
-        st.success(
-            f"Ingestion complete: files={stats.files_processed}, chunks={stats.chunks_added}"
-        )
+        st.success(f"Ingestion complete: files={stats.files_processed}")
 
 st.divider()
 st.subheader("2) Ask a question")
@@ -75,11 +89,3 @@ if st.button("Ask"):
 
         st.markdown("### Answer")
         st.write(result["answer"])
-
-        with st.expander("Retrieved context"):
-            if result["context"]:
-                for i, chunk in enumerate(result["context"], start=1):
-                    st.markdown(f"**Chunk {i}:**")
-                    st.write(chunk)
-            else:
-                st.write("No context found.")

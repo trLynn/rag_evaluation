@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
-
 from typing import Any
+from typing import Iterable, Sequence
 
 
 @dataclass
@@ -18,8 +18,9 @@ class IngestionStats:
 
 
 def read_text_file(path: Path) -> str:
-    """Read text content from a file path."""
-    return path.read_text(encoding="utf-8")
+    """Read text content from a file path, tolerating non-text bytes."""
+    raw_bytes = path.read_bytes()
+    return raw_bytes.decode("utf-8", errors="ignore")
 
 
 def chunk_text(text: str, chunk_size: int = 500, chunk_overlap: int = 80) -> list[str]:
@@ -45,6 +46,13 @@ def chunk_text(text: str, chunk_size: int = 500, chunk_overlap: int = 80) -> lis
         if end >= len(cleaned):
             break
     return chunks
+
+
+def build_chunk_ids(path: Path, chunks_count: int) -> list[str]:
+    """Build stable, source-specific ids for each chunk in a file."""
+    source_key = str(path.resolve())
+    source_hash = hashlib.sha1(source_key.encode("utf-8")).hexdigest()[:12]
+    return [f"{path.stem}-{source_hash}-{i}" for i in range(chunks_count)]
 
 
 def create_collection(
@@ -96,7 +104,7 @@ def ingest_documents(
         if not chunks:
             continue
 
-        ids = [f"{path.stem}-{i}" for i in range(len(chunks))]
+        ids = build_chunk_ids(path, len(chunks))
         metadatas = [{"source": str(path), "chunk": i} for i in range(len(chunks))]
 
         collection.upsert(ids=ids, documents=chunks, metadatas=metadatas)
