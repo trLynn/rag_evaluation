@@ -1,3 +1,8 @@
 # Ignore everything in the data folder...
 data/raw/*
 data/processed/*
+
+# Python cache/artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
