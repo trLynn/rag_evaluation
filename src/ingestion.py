@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Sequence, Any
@@ -58,20 +59,18 @@ def create_collection(
     persist_dir="vector_db",
     collection_name="knowledge_base",
     embedding_model="nomic-embed-text",
+    ollama_base_url: str | None = None,
 ) -> Any:
     import chromadb
     from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
 
     client = chromadb.PersistentClient(path=persist_dir)
+    host = ollama_base_url or os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
     embedding_fn = OllamaEmbeddingFunction(
         model_name=embedding_model,
-        url="http://localhost:11434/api/embeddings",
-    )
-
-    return client.get_or_create_collection(
-        name=collection_name,
-        embedding_function=embedding_fn,
+        # Chroma expects a base Ollama host here.
+        url=host,
     )
 
 
@@ -81,9 +80,29 @@ def ingest_documents(
     persist_dir="vector_db",
     collection_name="knowledge_base",
     embedding_model="nomic-embed-text",
+    ollama_base_url: str | None = None,
 ) -> IngestionStats:
 
-    collection = create_collection(persist_dir, collection_name, embedding_model)
+    collection = create_collection(
+        persist_dir,
+        collection_name,
+        embedding_model,
+        ollama_base_url=ollama_base_url,
+    )
+    host = ollama_base_url or os.getenv("OLLAMA_HOST", "http://localhost:11434")
+
+    # Fail fast with a clear setup error before processing files/chunks.
+    try:
+        import ollama
+
+        ollama.Client(host=host).embed(model=embedding_model, input=["health-check"])
+    except Exception as exc:
+        raise RuntimeError(
+            "Ollama embedding preflight failed. "
+            f"Host: {host}. Model: {embedding_model}. "
+            "Start Ollama (`ollama serve`) and ensure the model exists "
+            f"(`ollama pull {embedding_model}`)."
+        ) from exc
 
     total_chunks = 0
     files_processed = 0
@@ -109,13 +128,21 @@ def ingest_documents(
         ids = build_chunk_ids(path, len(chunks))
         metadatas = [{"source": str(path), "chunk": i} for i in range(len(chunks))]
 
-        collection.upsert(
-            ids=ids,
-            documents=chunks,
-            metadatas=metadatas
-        )
+        try:
+            collection.upsert(
+                ids=ids,
+                documents=chunks,
+                metadatas=metadatas
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                "Failed to upsert document chunks into Chroma. "
+                f"Host: {host}. Model: {embedding_model}. "
+                "Verify Ollama is running (`ollama serve`) and the embedding "
+                f"model is available (`ollama pull {embedding_model}`)."
+            ) from exc
 
         files_processed += 1
         total_chunks += len(chunks)
 
-    return IngestionStats(files_processed, total_chunks)
+  return IngestionStats(files_processed, total_chunks)
