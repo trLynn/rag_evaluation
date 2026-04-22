@@ -72,6 +72,7 @@ def create_collection(
     collection_name: str = "knowledge_base",
     embedding_model: str = "nomic-embed-text",
     ollama_base_url: str | None = None,
+    ollama_timeout: int = 180,
 ) -> Any:
     import chromadb
     from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
@@ -83,6 +84,7 @@ def create_collection(
         model_name=embedding_model,
         # Chroma expects a base Ollama host.
         url=host,
+        timeout=ollama_timeout,
     )
 
     return client.get_or_create_collection(
@@ -97,12 +99,18 @@ def ingest_documents(
     collection_name: str = "knowledge_base",
     embedding_model: str = "nomic-embed-text",
     ollama_base_url: str | None = None,
+    batch_size: int = 100,
+    ollama_timeout: int = 180,
 ) -> IngestionStats:
+    if batch_size <= 0:
+        raise ValueError("batch_size must be > 0")
+
     collection = create_collection(
         persist_dir=persist_dir,
         collection_name=collection_name,
         embedding_model=embedding_model,
         ollama_base_url=ollama_base_url,
+        ollama_timeout=ollama_timeout,
     )
     host = _resolve_ollama_host(ollama_base_url)
 
@@ -143,11 +151,16 @@ def ingest_documents(
         metadatas = [{"source": str(path), "chunk": i} for i in range(len(chunks))]
 
         try:
-            collection.upsert(
-                ids=ids,
-                documents=chunks,
-                metadatas=metadatas,
-            )
+            for i in range(0, len(chunks), batch_size):
+                batch_chunks = chunks[i : i + batch_size]
+                batch_ids = ids[i : i + batch_size]
+                batch_metadatas = metadatas[i : i + batch_size]
+
+                collection.upsert(
+                    ids=batch_ids,
+                    documents=batch_chunks,
+                    metadatas=batch_metadatas,
+                )
         except Exception as exc:
             # Common recovery path: existing collection was created with a
             # different embedding dimension/model.
@@ -161,12 +174,17 @@ def ingest_documents(
                     collection_name=collection_name,
                     embedding_model=embedding_model,
                     ollama_base_url=ollama_base_url,
+                    ollama_timeout=ollama_timeout,
                 )
-                collection.upsert(
-                    ids=ids,
-                    documents=chunks,
-                    metadatas=metadatas,
-                )
+                for i in range(0, len(chunks), batch_size):
+                    batch_chunks = chunks[i : i + batch_size]
+                    batch_ids = ids[i : i + batch_size]
+                    batch_metadatas = metadatas[i : i + batch_size]
+                    collection.upsert(
+                        ids=batch_ids,
+                        documents=batch_chunks,
+                        metadatas=batch_metadatas,
+                    )
                 continue
 
             raise RuntimeError(
