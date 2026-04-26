@@ -32,7 +32,12 @@ def get_all_files():
     return files
 
 
-def run_ingestion(chunk_workers: int = 4):
+def run_ingestion(
+    chunk_workers: int = 4,
+    batch_size: int = 100,
+    ollama_timeout: int = 180,
+    max_timeout_retries: int = 3,
+):
     """Run full ingestion pipeline."""
     file_paths = get_all_files()
 
@@ -49,6 +54,9 @@ def run_ingestion(chunk_workers: int = 4):
         collection_name=COLLECTION_NAME,
         embedding_model=EMBEDDING_MODEL,
         chunk_workers=chunk_workers,
+        batch_size=batch_size,
+        ollama_timeout=ollama_timeout,
+        max_timeout_retries=max_timeout_retries,
     )
 
     end_time = time.time()
@@ -60,7 +68,13 @@ def run_ingestion(chunk_workers: int = 4):
 
 
 # ------------------ OPTIONAL: WATCH MODE ------------------
-def watch_and_update(interval=10, chunk_workers: int = 4):
+def watch_and_update(
+    interval=10,
+    chunk_workers: int = 4,
+    batch_size: int = 100,
+    ollama_timeout: int = 180,
+    max_timeout_retries: int = 3,
+):
     """
     Watch docs folder and auto-ingest when files change.
     """
@@ -73,7 +87,12 @@ def watch_and_update(interval=10, chunk_workers: int = 4):
 
         if current_files != seen_files:
             print("\n🔄 Change detected! Re-ingesting...\n")
-            run_ingestion(chunk_workers=chunk_workers)
+            run_ingestion(
+                chunk_workers=chunk_workers,
+                batch_size=batch_size,
+                ollama_timeout=ollama_timeout,
+                max_timeout_retries=max_timeout_retries,
+            )
             seen_files = current_files
 
         time.sleep(interval)
@@ -85,16 +104,45 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--watch", action="store_true", help="Run in watch mode")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--watch", action="store_true", help="Run in watch mode")
     parser.add_argument(
         "--chunk-workers",
         type=int,
         default=4,
         help="Number of background workers to use while chunking files",
     )
-
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=100,
+        help="Documents per embedding/upsert batch",
+    )
+    parser.add_argument(
+        "--ollama-timeout",
+        type=int,
+        default=180,
+        help="Timeout in seconds for Ollama embedding requests",
+    )
+    parser.add_argument(
+        "--max-timeout-retries",
+        type=int,
+        default=3,
+        help="Number of retries before splitting a timed-out upsert batch",
+    )
+    
     args = parser.parse_args()
-
     if args.watch:
-        watch_and_update(chunk_workers=args.chunk_workers)
+        watch_and_update(
+            chunk_workers=args.chunk_workers,
+            batch_size=args.batch_size,
+            ollama_timeout=args.ollama_timeout,
+            max_timeout_retries=args.max_timeout_retries,
+        )
     else:
-        run_ingestion(chunk_workers=args.chunk_workers)
+        run_ingestion(
+            chunk_workers=args.chunk_workers,
+            batch_size=args.batch_size,
+            ollama_timeout=args.ollama_timeout,
+            max_timeout_retries=args.max_timeout_retries,
+        )

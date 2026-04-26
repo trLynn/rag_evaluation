@@ -2,17 +2,18 @@ from __future__ import annotations
 
 import hashlib
 import os
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Iterable, Sequence
 
-
 @dataclass
 class IngestionStats:
     files_processed: int
     chunks_added: int
-    
+
+
 @dataclass
 class ChunkedFile:
     path: Path
@@ -92,6 +93,69 @@ def _ollama_troubleshooting_hint(embedding_model: str) -> str:
 def _is_likely_dimension_mismatch_error(exc: Exception) -> bool:
     text = str(exc).lower()
     return "dimension" in text or "embedding size" in text or "incompatible" in text
+
+
+def _is_timeout_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return "timeout" in text or "timed out" in text or "readtimeout" in text
+
+
+def _upsert_batch_with_backoff(
+    collection: Any,
+    batch_ids: list[str],
+    batch_chunks: list[str],
+    batch_metadatas: list[dict[str, Any]],
+    min_batch_size: int = 1,
+    max_timeout_retries: int = 3,
+    base_retry_sleep_seconds: float = 1.0,
+) -> None:
+    if min_batch_size <= 0:
+        raise ValueError("min_batch_size must be > 0")
+    if max_timeout_retries < 0:
+        raise ValueError("max_timeout_retries must be >= 0")
+
+    last_timeout_exc: Exception | None = None
+    for attempt in range(max_timeout_retries + 1):
+        try:
+            collection.upsert(
+                ids=batch_ids,
+                documents=batch_chunks,
+                metadatas=batch_metadatas,
+            )
+            return
+        except Exception as exc:
+            if not _is_timeout_error(exc):
+                raise
+            last_timeout_exc = exc
+            if attempt < max_timeout_retries:
+                sleep_seconds = base_retry_sleep_seconds * (2**attempt)
+                time.sleep(sleep_seconds)
+
+    if len(batch_chunks) <= min_batch_size:
+        raise RuntimeError(
+            "Timed out while upserting even at minimum batch size "
+            f"({len(batch_chunks)})."
+        ) from last_timeout_exc
+
+    midpoint = len(batch_chunks) // 2
+    _upsert_batch_with_backoff(
+        collection=collection,
+        batch_ids=batch_ids[:midpoint],
+        batch_chunks=batch_chunks[:midpoint],
+        batch_metadatas=batch_metadatas[:midpoint],
+        min_batch_size=min_batch_size,
+        max_timeout_retries=max_timeout_retries,
+        base_retry_sleep_seconds=base_retry_sleep_seconds,
+    )
+    _upsert_batch_with_backoff(
+        collection=collection,
+        batch_ids=batch_ids[midpoint:],
+        batch_chunks=batch_chunks[midpoint:],
+        batch_metadatas=batch_metadatas[midpoint:],
+        min_batch_size=min_batch_size,
+        max_timeout_retries=max_timeout_retries,
+        base_retry_sleep_seconds=base_retry_sleep_seconds,
+    )
 
 
 def create_collection(
