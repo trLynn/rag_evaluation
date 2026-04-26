@@ -18,6 +18,7 @@ class IngestionStats:
 class ChunkedFile:
     path: Path
     chunks: list[str]
+    content_hash: str
 
 
 def read_text_file(path: Path) -> str:
@@ -52,10 +53,18 @@ def build_chunk_ids(path: Path, count: int) -> list[str]:
     source_hash = hashlib.sha1(source.encode()).hexdigest()[:12]
     return [f"{path.stem}-{source_hash}-{i}" for i in range(count)]
 
+
+def build_content_hash(text: str) -> str:
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()
+
+
 def _chunk_file(path: Path) -> ChunkedFile:
     text = read_text_file(path)
-    return ChunkedFile(path=path, chunks=chunk_text(text))
-
+    return ChunkedFile(
+        path=path,
+        chunks=chunk_text(text),
+        content_hash=build_content_hash(text),
+    )
 
 def chunk_documents_in_background(
     file_paths: Sequence[str] | Iterable[str],
@@ -230,22 +239,42 @@ def ingest_documents(
     for chunked_file in chunked_files:
         path = chunked_file.path
         chunks = chunked_file.chunks
+        content_hash = chunked_file.content_hash
 
         if not path.exists():
             continue
 
         print(f"\nProcessing: {path}")
 
-        text = read_text_file(path)
-        chunks = chunk_text(text)
-
         print(f"Chunks created: {len(chunks)}")
 
         if not chunks:
             continue
 
+        try:
+            existing = collection.get(
+                where={"source": str(path)},
+                include=["metadatas"],
+            )
+            existing_metadatas = existing.get("metadatas", []) if existing else []
+            existing_chunks = len(existing.get("ids", [])) if existing else 0
+            existing_hash = (
+                existing_metadatas[0].get("content_hash")
+                if existing_metadatas and existing_metadatas[0]
+                else None
+            )
+            if existing_hash == content_hash and existing_chunks == len(chunks):
+                print("⏭️ Skipping unchanged file (already indexed)")
+                continue
+        except Exception:
+            # If metadata lookup fails, continue with normal upsert behavior.
+            pass
+
         ids = build_chunk_ids(path, len(chunks))
-        metadatas = [{"source": str(path), "chunk": i} for i in range(len(chunks))]
+        metadatas = [
+            {"source": str(path), "chunk": i, "content_hash": content_hash}
+            for i in range(len(chunks))
+        ]
 
         try:
             for i in range(0, len(chunks), batch_size):
