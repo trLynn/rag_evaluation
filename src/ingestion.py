@@ -166,6 +166,23 @@ def _upsert_batch_with_backoff(
         base_retry_sleep_seconds=base_retry_sleep_seconds,
     )
 
+def _create_chroma_client(persist_dir: str) -> Any:
+    import chromadb
+    from chromadb.config import Settings
+
+    try:
+        return chromadb.PersistentClient(path=persist_dir)
+    except Exception as exc:
+        error_text = str(exc).lower()
+        if "default_tenant" in error_text or "rustbindingsapi" in error_text:
+            return chromadb.Client(
+                Settings(
+                    is_persistent=True,
+                    persist_directory=persist_dir,
+                    chroma_api_impl="chromadb.api.segment.SegmentAPI",
+                )
+            )
+        raise
 
 def create_collection(
     persist_dir: str = "vector_db",
@@ -173,11 +190,10 @@ def create_collection(
     embedding_model: str = "nomic-embed-text",
     ollama_base_url: str | None = None,
     ollama_timeout: int = 180,
-) -> Any:
-    import chromadb
+)  -> Any:
     from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
 
-    client = chromadb.PersistentClient(path=persist_dir)
+    client = _create_chroma_client(persist_dir=persist_dir)
     host = _resolve_ollama_host(ollama_base_url)
 
     embedding_fn = OllamaEmbeddingFunction(
@@ -291,9 +307,7 @@ def ingest_documents(
             # Common recovery path: existing collection was created with a
             # different embedding dimension/model.
             if _is_likely_dimension_mismatch_error(exc):
-                import chromadb
-
-                client = chromadb.PersistentClient(path=persist_dir)
+                client = _create_chroma_client(persist_dir=persist_dir)
                 client.delete_collection(name=collection_name)
                 collection = create_collection(
                     persist_dir=persist_dir,
