@@ -192,7 +192,9 @@ def ingest_documents(
     ollama_base_url: str | None = None,
     batch_size: int = 100,
     ollama_timeout: int = 180,
-    chunk_workers: int = 4,
+    # ADD THESE TWO LINES BELOW:
+    chunk_workers: int = 1, 
+    max_timeout_retries: int = 3 
 ) -> IngestionStats:
     if batch_size <= 0:
         raise ValueError("batch_size must be > 0")
