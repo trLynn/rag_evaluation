@@ -1,7 +1,22 @@
-# Ignore everything in the data folder...
-docs
+# Local Vector Database (Prevents infinite loops in Streamlit)
+vector_db/
 
-# Python cache/artifacts
+# Documents Folder (Ignore actual PDFs/docs, keep a sample if needed)
+docs/
+!docs/notes.txt
+
+# Python cache and artifacts
 __pycache__/
 *.py[cod]
+*$py.class
 .pytest_cache/
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Logs and environment variables
+*.log
+ingestion_log.txt
+.env

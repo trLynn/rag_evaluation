@@ -4,6 +4,7 @@ import hashlib
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Iterable, Sequence
 
 
@@ -11,6 +12,11 @@ from typing import Any, Iterable, Sequence
 class IngestionStats:
     files_processed: int
     chunks_added: int
+    
+@dataclass
+class ChunkedFile:
+    path: Path
+    chunks: list[str]
 
 
 def read_text_file(path: Path) -> str:
@@ -28,20 +34,16 @@ def chunk_text(text: str, chunk_size: int = 500, chunk_overlap: int = 80) -> lis
     if not cleaned:
         return []
 
-    chunks: list[str] = []
-    step = chunk_size - chunk_overlap
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-    for start in range(0, len(cleaned), step):
-        end = start + chunk_size
-        chunk = cleaned[start:end]
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        length_function=len,
+        is_separator_regex=False,
+    )
 
-        if chunk:
-            chunks.append(chunk)
-
-        if end >= len(cleaned):
-            break
-
-    return chunks
+    return [chunk.strip() for chunk in splitter.split_text(cleaned) if chunk.strip()]
 
 
 def build_chunk_ids(path: Path, count: int) -> list[str]:
@@ -49,6 +51,31 @@ def build_chunk_ids(path: Path, count: int) -> list[str]:
     source_hash = hashlib.sha1(source.encode()).hexdigest()[:12]
     return [f"{path.stem}-{source_hash}-{i}" for i in range(count)]
 
+def _chunk_file(path: Path) -> ChunkedFile:
+    text = read_text_file(path)
+    return ChunkedFile(path=path, chunks=chunk_text(text))
+
+
+def chunk_documents_in_background(
+    file_paths: Sequence[str] | Iterable[str],
+    max_workers: int = 4,
+) -> list[ChunkedFile]:
+    if max_workers <= 0:
+        raise ValueError("max_workers must be > 0")
+
+    existing_paths = [Path(file_path) for file_path in file_paths if Path(file_path).exists()]
+    if not existing_paths:
+        return []
+
+    chunked_files: list[ChunkedFile] = []
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_chunk_file, path): path for path in existing_paths}
+        for future in as_completed(futures):
+            chunked_files.append(future.result())
+
+    # Keep deterministic order for predictable ingestion and logging.
+    chunked_files.sort(key=lambda item: str(item.path))
+    return chunked_files
 
 def _resolve_ollama_host(ollama_base_url: str | None) -> str:
     return ollama_base_url or os.getenv("OLLAMA_HOST", "http://localhost:11434")
@@ -101,6 +128,7 @@ def ingest_documents(
     ollama_base_url: str | None = None,
     batch_size: int = 100,
     ollama_timeout: int = 180,
+    chunk_workers: int = 4,
 ) -> IngestionStats:
     if batch_size <= 0:
         raise ValueError("batch_size must be > 0")
@@ -131,8 +159,11 @@ def ingest_documents(
     total_chunks = 0
     files_processed = 0
 
-    for file_path in file_paths:
-        path = Path(file_path)
+    chunked_files = chunk_documents_in_background(file_paths, max_workers=chunk_workers)
+
+    for chunked_file in chunked_files:
+        path = chunked_file.path
+        chunks = chunked_file.chunks
 
         if not path.exists():
             continue
