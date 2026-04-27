@@ -1,7 +1,7 @@
 # Ollama RAG Chatbot + Evaluation
 
 This project gives you a local chatbot with retrieval (RAG) using:
-- **Ollama** for generation (`llama3.1`) and embeddings (`nomic-embed-text`)
+- **Ollama** for generation (`llama3:latest`) and embeddings (`nomic-embed-text`)
 - **ChromaDB** for persistent vector storage
 - A simple **CLI** for ingestion/chat/evaluation
 - A **Streamlit UI** for interactive usage
@@ -27,7 +27,7 @@ ollama serve
 Then pull models:
 
 ```bash
-ollama pull llama3.1
+ollama pull llama3:latest
 ollama pull nomic-embed-text
 ```
 
