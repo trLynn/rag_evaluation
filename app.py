@@ -8,6 +8,10 @@ from pathlib import Path
 
 from src.ingestion import ingest_documents
 from src.retrieval import answer_question
+import streamlit as st
+import json
+import os
+
 
 
 DOCS_DIR = Path("docs")
@@ -195,6 +199,43 @@ def main() -> None:
             ollama_timeout=args.ollama_timeout,
             max_timeout_retries=args.max_timeout_retries,
         )
+
+# 1. Function to save questions and answers into a JSON file
+def log_chat_history(question, ai_response, log_file="chat_logs.json"):
+    log_entry = {
+        "question": question,
+        "ai_response": ai_response,
+        "expected_substring": ""  # You will fill this manually later
+    }
+    
+    # If the file exists, read it; otherwise, create a new list
+    if os.path.exists(log_file):
+        with open(log_file, "r", encoding="utf-8") as f:
+            logs = json.load(f)
+    else:
+        logs = []
+        
+    logs.append(log_entry)
+    
+    # Write back into the file
+    with open(log_file, "w", encoding="utf-8") as f:
+        json.dump(logs, f, indent=4, ensure_ascii=False)
+
+
+# --- Your original Streamlit UI code ---
+st.title("📄 Document Chatbot")
+
+if prompt := st.chat_input("Ask a question..."):
+    # Display the user’s question (your original code handles this)
+    
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            # Ask the AI for an answer
+            response = answer_question(prompt, model_name="phi3")
+            st.markdown(response)
+            
+            # 2. Save the question and answer into the JSON file
+            log_chat_history(question=prompt, ai_response=response)
 
 
 if _is_running_in_streamlit():
