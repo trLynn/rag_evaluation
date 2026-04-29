@@ -14,7 +14,7 @@ DOCS_DIR = Path("docs")
 PERSIST_DIR = "vector_db"
 COLLECTION_NAME = "knowledge_base"
 EMBEDDING_MODEL = "nomic-embed-text"
-LLM_MODEL = "llama3:latest"
+LLM_MODEL = "llama3.1"
 
 
 def get_all_files() -> list[str]:
@@ -140,6 +140,8 @@ def run_streamlit_app() -> None:
                     collection_name=COLLECTION_NAME,
                     embedding_model=embedding_model,
                 )
+            if result.get("model_used"):
+                st.caption(f"Model used: `{result['model_used']}`")
             st.markdown(result["answer"])
 
         st.session_state["messages"].append(

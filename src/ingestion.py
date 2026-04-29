@@ -22,23 +22,38 @@ class ChunkedFile:
 
 
 def read_text_file(path: Path) -> str:
+    if path.suffix.lower() == ".pdf":
+        try:
+            from pypdf import PdfReader
+        except Exception as exc:
+            raise RuntimeError(
+                "PDF support requires `pypdf`. Install with: `pip install pypdf`."
+            ) from exc
+
+        reader = PdfReader(str(path))
+        pages: list[str] = []
+        for page in reader.pages:
+            pages.append(page.extract_text() or "")
+        return "\n\n".join(pages).strip()
+
     raw_bytes = path.read_bytes()
     return raw_bytes.decode("utf-8", errors="ignore")
 
 
-def chunk_text(text: str, chunk_size: int = 500, chunk_overlap: int = 80) -> list[str]:
+def chunk_text(text: str, chunk_size: int = 900, chunk_overlap: int = 150) -> list[str]:
     if chunk_size <= 0:
         raise ValueError("chunk_size must be > 0")
-    if chunk_overlap >= chunk_size:
+    if chunk_overlap  >= chunk_size:
         raise ValueError("chunk_overlap must be smaller than chunk_size")
 
-    cleaned = " ".join(text.split())
+    cleaned = text.replace("\r\n", "\n").strip()
     if not cleaned:
         return []
 
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
+        separators=["\n\n", "\n", ". ", " ", ""],
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         length_function=len,
