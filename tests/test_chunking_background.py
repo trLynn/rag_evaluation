@@ -1,3 +1,5 @@
+from src.ingestion import _upsert_batch_with_backoff, chunk_documents_in_background
+
 class _FlakyCollection:
     def __init__(self):
         self.calls = []

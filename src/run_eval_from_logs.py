@@ -1,36 +1,50 @@
+import argparse
 import json
-from src.evaluation import evaluate_retrieval, EvalExample
 
-def run_evaluation_from_json(log_file="chat_logs.json"):
-    print(f"Reading logs from {log_file}...")
-    
-    # Open the JSON log file and load the content
+from src.evaluation import EvalExample, evaluate_retrieval
+
+
+def load_eval_examples(log_file: str, expected_field: str = "expected_substring") -> list[EvalExample]:
+    """Load evaluable examples from a JSON chat log file."""
     with open(log_file, "r", encoding="utf-8") as f:
         logs = json.load(f)
-        
-    test_cases = []
-    
+
+    examples: list[EvalExample] = []
     for entry in logs:
-        # Only evaluate questions where you have manually filled in 'expected_substring'
-        if entry.get("expected_substring") != "":
-            test_cases.append(EvalExample(
-                question=entry["question"],
-                expected_substring=entry["expected_substring"]
-            ))
-            
+        expected_value = str(entry.get(expected_field, "")).strip()
+        question = str(entry.get("question", "")).strip()
+        if question and expected_value:
+            examples.append(EvalExample(question=question, expected_substring=expected_value))
+    return examples
+
+
+def run_evaluation_from_json(log_file: str = "chat_logs.json", expected_field: str = "expected_substring", top_k: int = 5):
+    print(f"Reading logs from {log_file}...")
+    test_cases = load_eval_examples(log_file=log_file, expected_field=expected_field)
+
     if not test_cases:
-        print("❌ No questions available for evaluation. Please fill in 'expected_substring' values in 'chat_logs.json' first.")
+        print(
+            f"❌ No questions available for evaluation. Please fill in non-empty '{expected_field}' values in '{log_file}' first."
+        )
         return
 
     print(f"Found {len(test_cases)} questions ready for evaluation.")
-    
-    # Call the evaluation function from src/evaluation.py
-    result = evaluate_retrieval(examples=test_cases, top_k=5)
-    
+    retrieval_result = evaluate_retrieval(examples=test_cases, top_k=top_k)
+
     print("\n=== FINAL RESULTS ===")
-    print(f"Total Evaluated: {result.total}")
-    print(f"Hit Rate: {result.hit_rate * 100}%")
-    print(f"Average Latency: {result.avg_latency:.4f} seconds")
+    print(f"Total Evaluated: {retrieval_result.total}")
+    print(f"Hits: {retrieval_result.hits}")
+    print(f"Hit Rate: {retrieval_result.hit_rate * 100:.2f}%")
+
 
 if __name__ == "__main__":
-    run_evaluation_from_json()
+    parser = argparse.ArgumentParser(description="Evaluate chat logs with the project RAG evaluation module.")
+    parser.add_argument("--log-file", default="chat_logs.json", help="Path to chat log JSON file")
+    parser.add_argument(
+        "--expected-field",
+        default="expected_substring",
+        help="Field name in each log entry containing the expected answer substring",
+    )
+    parser.add_argument("--top-k", type=int, default=5, help="Top-k contexts to retrieve during evaluation")
+    args = parser.parse_args()
+    run_evaluation_from_json(log_file=args.log_file, expected_field=args.expected_field, top_k=args.top_k)

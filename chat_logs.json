@@ -1,0 +1,7 @@
+[
+    {
+        "question": "hi",
+        "ai_response": "I don't have any information about a person named \"hi\". The context provided does not mention or relate to the name \"hi\" in any way.",
+        "expected_substring": ""
+    }
+]
