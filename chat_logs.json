@@ -1,7 +1,62 @@
 [
     {
-        "question": "hi",
-        "ai_response": "I don't have any information about a person named \"hi\". The context provided does not mention or relate to the name \"hi\" in any way.",
+        "question": "What is the fee and timeline for extending a Non-Immigrant ED visa?",
+        "ai_response": "[model: llama3.1] According to the context, the fee and timeline for extending a Non-Immigrant ED visa are:\n\n* Fee: 1900 THB\n* Timeline: apply 2–4 weeks before expiry.",
+        "expected_substring": ""
+    },
+    {
+        "question": "dsgive me; the fee . i amd doing ed visa extgension",
+        "ai_response": "[model: llama3.1] According to the provided context, for an ED visa extension, you need to report your residence. Based on the information in the context:\n\n{           \"name\": \"90_day_reporting\",           \"description\": \"report  residence  to  immigration\",           \"timeline\": \"15  days  before  to  7  days  after  deadline\",           \"methods\": [\"in-person  immigration  office\", \"online  system\", \"university  group  submission\"],           \"penalty\": \"2000–5000  THB  fine\"         },\n\nIt appears that the fee for this process is not directly mentioned in relation to ED visa extension. However, based on a similar process mentioned later:\n\n{           \"name\": \"tm30_residence_reporting\",           \"description\": \"report  foreigner  residence  by  landlord\",           \"timeline\": \"within  24  hours  of  arrival\",           \"requirement\":\n\nuniversity\",           \"process\": [\"obtain  registrar  letter\", \"submit  to  \nimmigration\", \"receive  7-day  grace  period\"],           \"fee\": \"1900  THB\",           \"risk\": \"issues  with  future  visa  if  not  cancelled\"         },\n\nThe closest information provided is the fee for reporting residence, which is 1900 THB. However, please note that this might not be directly applicable to your ED visa extension process, and it's always best to confirm with the relevant authorities or university administration for accurate information.\n\nIf you're looking for information on a specific type of report related to your ED visa extension, could you provide more context about which report you need to make? I'll do my best to help.",
+        "expected_substring": ""
+    },
+    {
+        "question": "dsgive me; the fee . i amd doing ed visa extgension",
+        "ai_response": "[model: llama3.1] You're looking for the fee associated with ED visa extension. From what I can see in this information, there's no specific mention of a fee directly related to ED visa extension. However, health insurance is required for visa extensions, and it's mentioned that \"minimum coverage per regulations\" is necessary.\n\nIf you could confirm if this is the correct requirement or if there's something else I should be looking at, I'd be happy to help further!",
+        "expected_substring": ""
+    },
+    {
+        "question": "non ed vis extgension visa fee?",
+        "ai_response": "[model: llama3.1] So you're looking for the fee associated with extending your non-ED visa. According to the information provided, the fee for a non-ED visa extension is 1900 THB. This applies every 90 days or annually, and it's mentioned as part of the \"visa_extension_non_ed\" service.",
+        "expected_substring": ""
+    },
+    {
+        "question": "what are the cheapest programs",
+        "ai_response": "[model: llama3.1] Let's talk about that. So, you're looking for affordable programs, right? Well, I'm not seeing any specific information on costs associated with the programs mentioned in this context.\n\nHowever, if we look at Heifer International's program, it seems to focus on providing resources and support to families in need, like Beatrice's family, rather than offering direct financial assistance. The program's goal is to help them gain self-sufficiency through livestock and education.\n\nIf you're looking for scholarships or programs that can provide financial aid, I'd recommend exploring more general sources of information. You could start by searching online for \"scholarships for low-income students\" or \"affordable education programs.\" That way, you'll get a broader range of options to consider.\n\nNow, regarding Michelle Obama's program in Chicago, it seems to focus on assisting young people in finding employment opportunities in public service. I'm not seeing any information that suggests this program is specifically designed for low-income students or has associated costs that might be relevant to your question.\n\nLastly, when it comes to Barack Obama's educational background, the information provided seems more focused on his personal history and career milestones rather than offering details about specific programs he may have been involved in.",
+        "expected_substring": ""
+    },
+    {
+        "question": "what are the cheapest programs in mfu",
+        "ai_response": "[model: llama3.1] To be honest, I couldn't find any information about the cost of programs at Mae Fah Luang University. The data you provided seems to focus more on the university's contact information and academic program details.\n\nHowever, I can tell you that the Bachelor of Engineering (B.Eng.) in Computer Engineering is a 4-year program offered by the School of Applied Digital Technology. Given its duration and field of study, it might be considered a relatively affordable option for students looking to pursue an engineering degree.\n\nIf you're interested in exploring other programs at MFU or getting more information about tuition fees, I would recommend reaching out to their international student affairs team directly. They should be able to provide you with the most up-to-date and accurate information about program costs and any available scholarships or financial aid options.",
+        "expected_substring": ""
+    },
+    {
+        "question": "မြန်မာလိုဖြေပေးပါရှင့်",
+        "ai_response": "[model: llama3.1] ကျွန်တမို့ စာအုပ်ထဲမှာ လူတစ်ယောက်၏ အသေးငယ်သည့် နိုဘယ်ရပ်မျှစီး ရာဇဝတ်ဆိုး အကောင်ထဲမှာ ဖြောင့်သည့် လူ ၅ ဦး ပါဝန်းတီး ထားမယ်။",
+        "expected_substring": ""
+    },
+    {
+        "question": "မြန်မာလိုမေးလို့ရလားရှင့်",
+        "ai_response": "[model: gemma3:4b] Oh, you’re asking if you can ask me questions in Burmese! Absolutely! Yes, of course you can! I’m happy to try my best to understand and respond in Burmese if that’s what you’d prefer. \n\nIt’s wonderful to see you exploring different ways to communicate. Don’t hesitate to ask – I'm here to help in whatever way I can. 😊",
+        "expected_substring": ""
+    },
+    {
+        "question": "mfu ကျောင်းက ဘယ်မှာရှိတာလဲ",
+        "ai_response": "[model: gemma3:4b] Okay, let’s find out where Mahidol University’s Faculty of Engineering is located! \n\nIt’s part of Mahidol University, and the faculty is actually located in Bangkok, Thailand. Specifically, it’s situated on the MFU campus. You can reach it by searching for “Faculty of Engineering, Mahidol University” – it’s pretty well-known!",
+        "expected_substring": ""
+    },
+    {
+        "question": "မဟုတ်ဘူး mae fah luang အကြောင်း",
+        "ai_response": "[model: gemma3:4b] Okay, let's tackle this! It looks like you're asking about “မဟုတ်ဘူး mae fah luang” – that’s Burmese, and it translates roughly to “it’s not true.” \n\nBased on the information provided, this question seems to be referencing Aung San Suu Kyi and the current political situation in Myanmar. Specifically, it’s likely connected to the coup in February 2021 and the actions of Min Aung Hlaing. \n\nYou’ve highlighted that Aung San Suu Kyi was a prominent figure in the struggle for democracy in Myanmar, and spent time under house arrest. This suggests the question might be challenging the narrative that she supports the current military regime or that her actions are justified. \n\nMin Aung Hlaing, as the current Commander-in-Chief of the Myanmar Armed Forces, is the leader who seized power in the coup, so the question could be questioning his legitimacy or the actions of the military. \n\nEssentially, it's a critical inquiry, pointing to potential inconsistencies between Suu Kyi's past advocacy for democracy and the current reality under Min Aung Hlaing's leadership. \n\nDo you want to delve deeper into any specific aspect of this, like exploring the reasons behind the coup or the ongoing conflict in Myanmar?",
+        "expected_substring": ""
+    },
+    {
+        "question": "i'm askiing about mae fah luang",
+        "ai_response": "[model: gemma3:4b] Okay, let’s talk about Mae Fah Luang! It seems like you’re interested in learning more about this fascinating figure and the area she was so involved with.\n\nBasically, Mae Fah Luang was a truly remarkable woman who became a hugely important figure in Northern Thailand. She started out as a dancer and performer, traveling and learning about different cultures – she really had a thirst for knowledge and experience. But she soon became deeply involved in supporting the local hill tribes in the Chiang Mai region.\n\nSpecifically, she worked with the Karen hill tribe, helping them to develop sustainable crafts like silk weaving, which became incredibly famous and helped bring income to the communities. She wasn't just providing aid, though; she was fighting for their rights and advocating for their traditions against encroaching government and outside interests. She even formed her own army, the Yellow Flowers of Rice, to protect the tribes and their land – a pretty bold move!\n\nOver time, she gained immense respect and influence, and she became a symbol of resistance and cultural preservation. She was a political activist, a businesswoman, and a cultural icon, all rolled into one. You can still visit her museum and learn more about her incredible story in Chiang Mai. \n\nDo you want me to delve into any particular aspect of her life, like her work with the Karen people, or maybe her political activism?",
+        "expected_substring": ""
+    },
+    {
+        "question": " what are you talking about. .... only give me facts",
+        "ai_response": "[model: gemma3:4b] Okay, let's break down what this text is about! Basically, it's introducing Greenwood biographies – a series of books that really dive into the lives of influential people. \n\nThey’ve carefully chosen these biographies, getting feedback from librarians and educators to make sure they’re both relevant to what students are learning and genuinely interesting. You’ll find a really cool mix of famous figures from history – like Al Capone – alongside modern successes like J.K. Rowling.\n\nA key thing they emphasize is that these aren’t just about glorifying people; they’re about presenting accurate, in-depth information about their lives, from childhood through adulthood. \n\nIt also touches on a really interesting idea – that the stories we tell ourselves about who we are have a huge impact on our lives. The author uses their own experience as an example, talking about feeling stuck and not knowing who they were because they were focused on what they *couldn’t* do.",
         "expected_substring": ""
     }
 ]

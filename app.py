@@ -17,6 +17,50 @@ PERSIST_DIR = "vector_db"
 COLLECTION_NAME = "knowledge_base"
 EMBEDDING_MODEL = "nomic-embed-text"
 LLM_MODEL = "llama3.1"
+
+
+def get_local_ollama_models() -> list[str]:
+    """Return locally available Ollama model names."""
+    try:
+        import ollama
+
+        models = [
+            item.get("model")
+            for item in ollama.list().get("models", [])
+            if item.get("model")
+        ]
+    except Exception:
+        models = []
+
+    if LLM_MODEL not in models:
+        models.insert(0, LLM_MODEL)
+
+    # Keep order stable while removing duplicates
+    return list(dict.fromkeys(models))
+
+
+def _init_chat_state(default_model: str) -> None:
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = []
+    if "selected_llm_model" not in st.session_state:
+        st.session_state["selected_llm_model"] = default_model
+
+
+def _render_model_toolbar(local_models: list[str]) -> str:
+    """Render a compact model control row near chat input."""
+    toolbar_col, model_col = st.columns([4, 2])
+    with toolbar_col:
+        st.caption(f"Active model: `{st.session_state['selected_llm_model']}`")
+    with model_col:
+        st.selectbox(
+            "Model",
+            options=local_models,
+            index=local_models.index(st.session_state["selected_llm_model"]),
+            key="selected_llm_model",
+            help="Switch local Ollama model for the next message.",
+            label_visibility="collapsed",
+        )
+    return st.session_state["selected_llm_model"]
 CHAT_LOG_FILE = Path("chat_logs.json")
 
 
@@ -358,27 +402,33 @@ def run_streamlit_app() -> None:
         unsafe_allow_html=True,
     )
 
-    # ── Chat input ─────────────────────────────────────────
-    prompt = st.chat_input("Ask anything about your documents…")
+    local_models = get_local_ollama_models()
+    _init_chat_state(default_model=local_models[0])
+    if st.session_state["selected_llm_model"] not in local_models:
+        local_models.insert(0, st.session_state["selected_llm_model"])
 
-    # ── Session state ──────────────────────────────────────
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = []
+    # ── Model toolbar + chat input ────────────────────────
+    selected_model = _render_model_toolbar(local_models=local_models)
+    prompt = st.chat_input("Ask anything about your documents…")
 
     if prompt:
         st.session_state["messages"].append({"role": "user", "content": prompt})
         with st.spinner("Thinking…"):
             result = answer_question(
                 question=prompt,
-                llm_model=LLM_MODEL,
+                llm_model=selected_model,
                 top_k=3,
                 persist_dir=PERSIST_DIR,
                 collection_name=COLLECTION_NAME,
                 embedding_model=EMBEDDING_MODEL,
             )
         answer_text = result.get("answer", "")
+        model_used = result.get("model_used", selected_model)
         st.session_state["messages"].append({"role": "assistant", "content": answer_text})
-        log_chat_history(question=prompt, ai_response=answer_text)
+        log_chat_history(
+            question=prompt,
+            ai_response=f"[model: {model_used}] {answer_text}",
+        )
 
     # ── Render conversation ────────────────────────────────
     if st.session_state["messages"]:

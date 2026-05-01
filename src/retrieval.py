@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import re
 from typing import Any
+import ollama
 
 from src.ingestion import create_collection
 
 # The strict instruction given to the AI so it doesn't make things up (hallucinate)
-SYSTEM_PROMPT = """You are a helpful assistant. Use the provided context to answer the question.
-If the answer is not present in the context, say you do not know."""
+SYSTEM_PROMPT = """You are a friendly and helpful student advisor. 
+When answering, do not just list data or JSON fields. 
+Speak in full, natural human sentences as if you are talking to a friend. 
+Summarize the information clearly and only use technical details if they are necessary for the answer."""
 
 # A list of larger, smarter AI models to prefer if the user's computer has them installed
 HIGH_QUALITY_MODEL_CANDIDATES = [
@@ -73,26 +76,24 @@ def retrieve_context(
     persist_dir: str = "vector_db",
     collection_name: str = "knowledge_base",
     embedding_model: str = "nomic-embed-text",
-    top_k: int = 3, # Number of final documents we want
+    top_k: int = 3,
+    collection=None,  # accept cached instance
 ) -> list[str]:
-    """Return top-k relevant chunks for a question."""
-    
-    # Connect to the Vector Database
-    collection = create_collection(
-        persist_dir=persist_dir,
-        collection_name=collection_name,
-        embedding_model=embedding_model,
-    )
-    
-    # Strategy: Fetch extra documents first (e.g., if we want 3, fetch 9) 
-    # so we have a larger pool to re-rank and choose the absolute best from.
-    fetch_k = max(top_k * 3, top_k)
+    """Query the vector database and return the most relevant context chunks."""
+    if collection is None:
+        collection = create_collection(
+            persist_dir=persist_dir,
+            collection_name=collection_name,
+            embedding_model=embedding_model,
+        )
+
+    # Clamp fetch_k to the actual number of stored documents to avoid ChromaDB errors
+    doc_count = collection.count()
+    fetch_k = min(top_k * 3, doc_count) if doc_count > 0 else top_k
+
     result = collection.query(query_texts=[question], n_results=fetch_k)
     docs = result.get("documents", [[]])[0]
-    
-    # Re-rank the fetched documents and return the very best ones
     return _rerank_chunks(question=question, docs=docs, limit=top_k)
-
 
 # The main answering function: Searches for info, picks a model, and generates the final answer
 def answer_question(
@@ -102,93 +103,63 @@ def answer_question(
     persist_dir: str = "vector_db",
     collection_name: str = "knowledge_base",
     embedding_model: str = "nomic-embed-text",
+    collection=None,  # accept a pre-built collection to avoid re-loading from disk
 ) -> dict[str, Any]:
-    """Run a full RAG pass: retrieve context then ask Ollama chat model."""
-    
-    # Step 1: Retrieve relevant information (context) from the database
+    """Perform RAG steps and request an answer from the AI model."""
+
+    # 1. Fetch available models ONCE and reuse throughout this function
+    available_models = _available_ollama_models(ollama)
+
+    # 2. Select the best available model upfront — no conditional guard needed
+    selected_model = next(
+        (candidate for candidate in HIGH_QUALITY_MODEL_CANDIDATES if candidate in available_models),
+        llm_model,  # fall back to caller-supplied model if nothing better is found
+    )
+
+    # 3. Retrieve relevant context chunks (reuse cached collection if provided)
     context_chunks = retrieve_context(
         question=question,
         top_k=top_k,
         persist_dir=persist_dir,
         collection_name=collection_name,
         embedding_model=embedding_model,
+        collection=collection,  # pass through so retrieve_context skips create_collection
     )
 
-    # Combine the separate chunks of text into one big string
     context_text = "\n\n".join(context_chunks) if context_chunks else "No context found."
 
-    import ollama
-
-    # Step 2: Prepare the prompt to send to the AI
+    # 4. Build prompt messages
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT}, # Tell it the rules
+        {"role": "system", "content": SYSTEM_PROMPT},
         {
             "role": "user",
-            "content": f"Context:\n{context_text}\n\nQuestion: {question}", # Provide info & question
+            "content": f"Context:\n{context_text}\n\nQuestion: {question}",
         },
     ]
 
-    selected_model = llm_model
-    
-    # Step 3: Smart Model Selection
-    try:
-        available_models = _available_ollama_models(ollama)
-        # If the user asked for "llama3.1", try to automatically upgrade them 
-        # to the highest quality model they actually have downloaded.
-        if llm_model == "llama3.1":
-            preferred_high_model = next(
-                (
-                    candidate
-                    for candidate in HIGH_QUALITY_MODEL_CANDIDATES
-                    if candidate in available_models
-                ),
-                llm_model,
-            )
-            selected_model = preferred_high_model
-    except Exception:
-        # If checking fails, just use the model they originally asked for
-        selected_model = llm_model
-
-    # Step 4: Ask the AI for the answer
+    # 5. Call the model, with automatic fallback to a smaller one if RAM is exhausted
     try:
         response = ollama.chat(model=selected_model, messages=messages)
     except Exception as exc:
-        # If the error is NOT about running out of memory, stop the program and show the error
         if "requires more system memory" not in str(exc).lower():
-            raise
+            raise  # unrelated error — let it propagate as-is
 
-        # Step 5: Fallback Mechanism (If computer runs out of memory/RAM)
-        try:
-            available_models = _available_ollama_models(ollama)
-        except Exception:
-            available_models = set()
-
-        # Find a smaller model from our LOW_MEMORY list that is available on the computer
+        # Re-use the already-fetched available_models set — no second network call
         fallback_model = next(
-            (
-                candidate
-                for candidate in LOW_MEMORY_MODEL_CANDIDATES
-                if candidate in available_models
-            ),
+            (candidate for candidate in LOW_MEMORY_MODEL_CANDIDATES if candidate in available_models),
             None,
         )
-        
-        # If no small models are downloaded, tell the user to download one
         if fallback_model is None:
             raise RuntimeError(
-                "The selected Ollama model does not fit into available RAM, and no "
-                "known low-memory fallback model was found locally. "
-                "Try: `ollama pull llama3.2:1b` and run again."
+                f"Model '{selected_model}' requires more RAM than is available, "
+                f"and no low-memory fallback was found among {LOW_MEMORY_MODEL_CANDIDATES}."
             ) from exc
 
-        # Try generating the answer again using the smaller, fallback model
         selected_model = fallback_model
         response = ollama.chat(model=selected_model, messages=messages)
 
-    # Return the AI's final answer, the documents it used, and the name of the model it ended up using
-    answer = response["message"]["content"]
     return {
-        "answer": answer,
+        "answer": response["message"]["content"],
         "context": context_chunks,
         "model_used": selected_model,
     }
