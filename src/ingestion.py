@@ -46,7 +46,7 @@ def read_text_file(path: Path) -> str:
 
 
 # Function to split long text into smaller, overlapping segments (chunks)
-def chunk_text(text: str, chunk_size: int = 900, chunk_overlap: int = 150) -> list[str]:
+def chunk_text(text: str, chunk_size: int = 500, chunk_overlap: int = 200) -> list[str]:
     if chunk_size <= 0:
         raise ValueError("chunk_size must be > 0")
     if chunk_overlap  >= chunk_size:

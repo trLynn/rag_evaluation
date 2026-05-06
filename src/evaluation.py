@@ -1,78 +1,80 @@
-"""Minimal evaluation helpers for RAG quality checks."""
-
 from __future__ import annotations
-
+import re
+import csv
 from dataclasses import dataclass
 from typing import Sequence
-
-# Imports the retrieval logic to test against the vector database
-from src.retrieval import retrieve_context
-
+from src.retrieval import retrieve_context, answer_question
 
 @dataclass
 class EvalExample:
-    """
-    Represents a single test case for evaluation.
-    
-    Attributes:
-        question: The query to send to the RAG system.
-        expected_substring: A specific string that MUST exist in the 
-                            retrieved documents for the test to pass.
-    """
     question: str
     expected_substring: str
 
-
 @dataclass
 class EvalResult:
-    """
-    Stores the final results of an evaluation run.
-    """
     total: int
     hits: int
-
     @property
     def hit_rate(self) -> float:
-        """
-        Calculates the percentage of successful retrievals (hits / total).
-        Returns 0.0 if the total is zero to avoid division errors.
-        """
-        return self.hits / self.total if self.total else 0.0
+        return (self.hits / self.total * 100) if self.total else 0.0
 
+def professional_clean(text: str) -> str:
+    """
+    CLEANS THE 'DOUBLE SPACE' ISSUE:
+    Turns 'Mae  Fah  Luang' into 'mae fah luang'.
+    This is the fix for your 0% Hit Rate.
+    """
+    # Replace all tabs, newlines, and multiple spaces with a single space
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip().lower()
 
-def evaluate_retrieval(
+def evaluate_retrieval_to_csv(
     examples: Sequence[EvalExample],
-    top_k: int = 3,
-    persist_dir: str = "vector_db",
-    collection_name: str = "knowledge_base",
-    embedding_model: str = "nomic-embed-text",
+    output_file: str = "evaluation_results.csv",
+    top_k: int = 5
 ) -> EvalResult:
-    """
-    Performs a 'Hit-Rate' evaluation to check the quality of the retriever.
-    
-    This function determines if the retriever found the 'right' information 
-    by checking if a ground-truth substring exists within the top-k 
-    retrieved document chunks.
-    """
     hits = 0
-    
-    # Iterate through every test case in the provided list
-    for ex in examples:
-        # Step 1: Search the vector database for the top-k chunks
-        docs = retrieve_context(
-            question=ex.question,
-            top_k=top_k,
-            persist_dir=persist_dir,
-            collection_name=collection_name,
-            embedding_model=embedding_model,
-        )
+    results_for_csv = []
+
+    print(f"\n🚀 Starting Professional Evaluation (Top-K: {top_k})")
+
+    for i, ex in enumerate(examples):
+        # 1. Get RAG Response
+        # We fetch the context and the AI's answer
+        rag_data = answer_question(question=ex.question, top_k=top_k)
         
-        # Step 2: Merge all retrieved chunks into one searchable string (lowercase)
-        corpus = "\n".join(docs).lower()
-        
-        # Step 3: Check if the 'expected' answer text is present in the chunks
-        if ex.expected_substring.lower() in corpus:
+        context_list = rag_data['context']
+        full_context_text = "\n".join(context_list)
+        ai_answer = rag_data['answer']
+
+        # 2. Comparison Logic (The Fix)
+        # We clean BOTH the database text and your expected answer
+        clean_context = professional_clean(full_context_text)
+        clean_expected = professional_clean(ex.expected_substring)
+
+        # Check if the answer is inside the context
+        is_hit = clean_expected in clean_context
+        if is_hit:
             hits += 1
 
-    # Return the summary of how many questions were answered correctly
+        status = "✅ HIT" if is_hit else "❌ MISS"
+        print(f"[{i+1}/{len(examples)}] {status} | Q: {ex.question[:40]}...")
+
+        # 3. Store for CSV
+        results_for_csv.append({
+            "Test_Case": i + 1,
+            "Question": ex.question,
+            "Expected_Information": ex.expected_substring,
+            "Match_Status": "HIT" if is_hit else "MISS",
+            "AI_Final_Answer": ai_answer.replace("\n", " "),
+            "Retrieved_Context_Preview": full_context_text.replace("\n", " ")[:300]
+        })
+
+    # 4. Write to CSV
+    keys = results_for_csv[0].keys()
+    with open(output_file, "w", newline="", encoding="utf-8-sig") as f:
+        dict_writer = csv.DictWriter(f, fieldnames=keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(results_data := results_for_csv)
+
     return EvalResult(total=len(examples), hits=hits)

@@ -1,62 +1,122 @@
 [
     {
-        "question": "What is the fee and timeline for extending a Non-Immigrant ED visa?",
-        "ai_response": "[model: llama3.1] According to the context, the fee and timeline for extending a Non-Immigrant ED visa are:\n\n* Fee: 1900 THB\n* Timeline: apply 2–4 weeks before expiry.",
+        "question": "Who is the author of the book?",
+        "ai_response": "[model: llama3.1] According to what I've read, the author of this book is Paulo Coelho. He's a Brazilian novelist who has had quite an amazing career, writing over two dozen books and becoming one of the most widely read authors in the world. His bestselling book, \"The Alchemist\", has made history with its sales figures - it's been translated into more languages than any other book by a living author!",
+        "expected_substring": "Larry Anderson"
+    },
+    {
+        "question": "How many inspiring biographies are in the book?",
+        "ai_response": "[model: llama3.1] Let's take a look at what we have here.\n\nThe author thanks Glen Stone for researching each of the inspiring lives featured in the book. And Robert Philp, Jay Ball, and another person (whose name isn't mentioned) all say that the book is filled with \"individual stories\" which suggests there are multiple biographies.\n\nBut if I had to put a number on it, I'd say there's at least one biography per teacher or mentor mentioned in the testimonials. So, we have Einstein, Shakespeare, Confucius, Dolly Parton, Black Elk, and Keats - that's six. And then there are others that Robert Philp mentions as \"individual stories\". \n\nSo, while I can't give you an exact number without more information, it seems like the book features a collection of biographies or inspiring life stories, each with its own profound lesson to learn from.",
+        "expected_substring": "75"
+    },
+    {
+        "question": "What year is the copyright for the Smashwords edition?",
+        "ai_response": "[model: llama3.1] According to the text, the copyright for the Smashwords edition is 2011. It says \"Smashwords Edition, Copyright 2011 LIAP Media Corp.\" So that's the year you're looking for!",
+        "expected_substring": "2011"
+    },
+    {
+        "question": "What is the name of the publishing company?",
+        "ai_response": "[model: llama3.1] The publishing company's name is LIAP Media Corp. It's also worth noting that it's a social enterprise, which means that its primary goal is not to make a profit, but rather to give back to charity through donations of royalties and profits.",
+        "expected_substring": "LIAP Media Corp"
+    },
+    {
+        "question": "In which city is the publisher located?",
+        "ai_response": "[model: llama3.1] So, to answer your question, the publisher, Joseph Pulitzer, turned out to be quite successful and eventually owned the largest newspaper in St. Louis. That's where we find him as the publisher of the St. Louis Post-Dispatch.",
+        "expected_substring": "Edmonton"
+    },
+    {
+        "question": "What is the street address of the publisher?",
+        "ai_response": "[model: llama3.1] So you're looking for the publisher's address. According to the information provided, the publisher, LIAP Media Corp., can be found at 1112-95 Street S.W. in Edmonton, Alberta, Canada. That's their physical address. If you want to reach them online, you can visit their website at http://www.LiveYourMagic.com.",
+        "expected_substring": "1112-95 Street S.W."
+    },
+    {
+        "question": "What is the official website for the book?",
+        "ai_response": "[model: llama3.1] According to what I've read, the official website for \"Live Your Magic\" is http://www.liveyourmagic.com. They also have a presence on Twitter at @liveyourmagic. It seems like they're encouraging readers to visit their website for updates and insights from Larry himself.",
+        "expected_substring": "http://www.liveyourmagic.com"
+    },
+    {
+        "question": "Who is the cover designer of the book?",
+        "ai_response": "[model: llama3.1] Unfortunately, there's no mention of a cover designer in this passage. It seems like you're reading a dedication or introduction to the book \"Inspiration to Live Your MAGIC!\", but it doesn't include any information about who designed the cover. Maybe you could check the credits page or ask the author if they remember who was responsible for designing the cover?",
+        "expected_substring": "Allen Mohr"
+    },
+    {
+        "question": "Who created the portrait illustrations?",
+        "ai_response": "[model: llama3.2:1b] Beatrix Potter created the portrait illustrations for The Tale of Peter Rabbit. In fact, Beatrix was very particular about the quality of these illustrations and wanted them to be not only beautiful but also authentic representations of the characters in the story. Her unique style and attention to detail helped to make her illustrations stand out and have become an iconic part of the book's charm.",
+        "expected_substring": "Beatrix Potter"
+    },
+    {
+        "question": "To whom is the book dedicated?",
+        "ai_response": "[model: llama3.1] The book is dedicated to three special people: Jennifer, the author's daughter, Stephen, their son, and more broadly, \"the youth of the world\". So, it seems like a really inspiring message for young readers!",
+        "expected_substring": "Jennifer"
+    },
+    {
+        "question": "What restaurant did Alice Waters create?",
+        "ai_response": "[model: llama3.1] Alice Waters created Chez Panisse! It's a super famous restaurant in California that's known for its delicious meals made with fresh, healthy ingredients. In fact, it's been named one of the best restaurants not just in the US, but in the whole world! And did I mention it was started by Alice herself?",
+        "expected_substring": "Chez Panisse"
+    },
+    {
+        "question": "Where was Alice Waters studying when she found fine food?",
+        "ai_response": "[model: llama3.1] So you're interested in learning about where Alice Waters was when she discovered the world of fine food. Well, it just so happens that she was studying education in France at the time! She must have been really passionate about her studies to be there abroad, but I guess it's true what they say - when you find something that sparks your interest, you can't help but get excited about it, right?",
+        "expected_substring": "France"
+    },
+    {
+        "question": "Alice Waters is credited for popularizing what?",
+        "ai_response": "[model: llama3.1] Let's take a look at Alice Waters' story. Unfortunately, it's not mentioned in this passage. We only have two biographies of famous individuals here - Abraham Lincoln and Walt Disney. Neither of them has any connection to Alice Waters. If you can give me more context or information about who Alice Waters is, I'd be happy to help!",
         "expected_substring": ""
     },
     {
-        "question": "dsgive me; the fee . i amd doing ed visa extgension",
-        "ai_response": "[model: llama3.1] According to the provided context, for an ED visa extension, you need to report your residence. Based on the information in the context:\n\n{           \"name\": \"90_day_reporting\",           \"description\": \"report  residence  to  immigration\",           \"timeline\": \"15  days  before  to  7  days  after  deadline\",           \"methods\": [\"in-person  immigration  office\", \"online  system\", \"university  group  submission\"],           \"penalty\": \"2000–5000  THB  fine\"         },\n\nIt appears that the fee for this process is not directly mentioned in relation to ED visa extension. However, based on a similar process mentioned later:\n\n{           \"name\": \"tm30_residence_reporting\",           \"description\": \"report  foreigner  residence  by  landlord\",           \"timeline\": \"within  24  hours  of  arrival\",           \"requirement\":\n\nuniversity\",           \"process\": [\"obtain  registrar  letter\", \"submit  to  \nimmigration\", \"receive  7-day  grace  period\"],           \"fee\": \"1900  THB\",           \"risk\": \"issues  with  future  visa  if  not  cancelled\"         },\n\nThe closest information provided is the fee for reporting residence, which is 1900 THB. However, please note that this might not be directly applicable to your ED visa extension process, and it's always best to confirm with the relevant authorities or university administration for accurate information.\n\nIf you're looking for information on a specific type of report related to your ED visa extension, could you provide more context about which report you need to make? I'll do my best to help.",
+        "question": "When was the biographies book released?",
+        "ai_response": "[model: llama3.1] There's no information about Michael J. Fox writing a book called \"Lucky Man\" or \"Inspiration to Live Your MAGIC!\". It seems like there are actually two separate books mentioned here, one written by Michael J. Fox and another one edited by the author of this text.\n\nThe text mentions Michael J. Fox's memoir \"Lucky Man: Adventures of an Incurable Optimist\", but it doesn't provide any information about its publication date.\n\nHowever, it does mention a book called \"Inspiration to Live Your MAGIC!\", which is apparently edited by Cathy Reed and Mary W. Walters. Unfortunately, the text doesn't provide any information about when this book was released either.\n\nIf you're looking for more information on Michael J. Fox's memoir or other books related to him, I'd be happy to help you find it!",
+        "expected_substring": "March 2012"
+    },
+    {
+        "question": "What book was scheduled for release in May 2012?",
+        "ai_response": "[model: llama3.1] The book that was scheduled for release in May 2012 is \"The Journey to Live Your Magic\". It's a book written by Larry, and it sounds like it's all about helping people discover their own potential and live their best lives.",
+        "expected_substring": "Journey to Live Your Magic"
+    },
+    {
+        "question": "What is the status of the trademark for the title?",
+        "ai_response": "[model: llama3.1] So you're wondering about the status of the \"MAGIC!\" trademark. Well, according to what I found, it says here that the trade mark is \"trade mark pending\", which means that Walt Disney hasn't finalized its registration with the relevant authorities yet. It's like filing a patent application - they've submitted their request, but it still needs approval before it can be officially used as a trademark.",
+        "expected_substring": "pending"
+    },
+    {
+        "question": "At what age did Larry Anderson drop out of school?",
+        "ai_response": "[model: llama3.1] So you want to know how old Larry Anderson was when he dropped out of school?\n\nAccording to the text, Larry Anderson dropped out of school at 16 years old.",
+        "expected_substring": "16"
+    },
+    {
+        "question": "What is the name of the Provincial Court Judge from Edmonton who reviewed the book?",
+        "ai_response": "[model: llama3.1] It doesn't seem like the text mentions a Provincial Court Judge from Edmonton reviewing the book. However, it does mention that Michael J. Fox is an Edmonton, Alberta native.",
+        "expected_substring": "Robert Philp"
+    },
+    {
+        "question": "Who researched the details for each of the inspiring biographies?",
+        "ai_response": "[model: llama3.1] According to the text, it was Glen Stone who did the research into each inspiring life, finding the details that would convey the essence of each journey. His work helped to make this book so special and inspiring!",
+        "expected_substring": "Glen Stone"
+    },
+    {
+        "question": "When did Larry Anderson begin setting aside Wednesdays to write?",
+        "ai_response": "[model: llama3.1] I think there's been a mix-up! There's no mention of Larry Anderson in the text you provided. The people mentioned are Ben Franklin and two others, Mattie (who wrote poetry) and Helen Keller (who overcame her disability and learned to communicate). But I don't see any information about a person named Larry Anderson. Can I help with anything else?",
         "expected_substring": ""
     },
     {
-        "question": "dsgive me; the fee . i amd doing ed visa extgension",
-        "ai_response": "[model: llama3.1] You're looking for the fee associated with ED visa extension. From what I can see in this information, there's no specific mention of a fee directly related to ED visa extension. However, health insurance is required for visa extensions, and it's mentioned that \"minimum coverage per regulations\" is necessary.\n\nIf you could confirm if this is the correct requirement or if there's something else I should be looking at, I'd be happy to help further!",
+        "question": "Who was the childhood friend Larry met at Daily Vacation Bible Camp in 1953?",
+        "ai_response": "[model: llama3.1] I think I can help with that. According to what you've written, Larry met his childhood friend Dave Kirk at Daily Vacation Bible Camp in the summer of 1953, when they were both just five years old. They ended up going to school together until grade nine, when Larry went to a different school. It sounds like they had a very close and enduring friendship!",
+        "expected_substring": "Dave Kirk"
+    },
+    {
+        "question": "What is the name of Larry Anderson's wife?",
+        "ai_response": "[model: llama3.1] Unfortunately, I don't see any information about Larry Anderson or his wife mentioned in the text you provided. It seems like we've got a lot of info about famous women like Eleanor Roosevelt and J.K. Rowling, but no mention of Larry Anderson at all.\n\nIf you could provide more context or information about who Larry Anderson is and what he's known for, I might be able to help you out!",
         "expected_substring": ""
     },
     {
-        "question": "non ed vis extgension visa fee?",
-        "ai_response": "[model: llama3.1] So you're looking for the fee associated with extending your non-ED visa. According to the information provided, the fee for a non-ED visa extension is 1900 THB. This applies every 90 days or annually, and it's mentioned as part of the \"visa_extension_non_ed\" service.",
-        "expected_substring": ""
+        "question": "Which 13-year-old girl hiding from the Nazis gave the author perspective?",
+        "ai_response": "[model: llama3.1] It was actually Anne Frank who gave you that much-needed perspective when you were feeling sorry for yourself. She's a pretty amazing and strong person, especially considering what she went through at such a young age. You saw how her attitude and outlook on life helped her cope with really tough circumstances, and that inspired hope in you too!",
+        "expected_substring": "Anne Frank"
     },
     {
-        "question": "what are the cheapest programs",
-        "ai_response": "[model: llama3.1] Let's talk about that. So, you're looking for affordable programs, right? Well, I'm not seeing any specific information on costs associated with the programs mentioned in this context.\n\nHowever, if we look at Heifer International's program, it seems to focus on providing resources and support to families in need, like Beatrice's family, rather than offering direct financial assistance. The program's goal is to help them gain self-sufficiency through livestock and education.\n\nIf you're looking for scholarships or programs that can provide financial aid, I'd recommend exploring more general sources of information. You could start by searching online for \"scholarships for low-income students\" or \"affordable education programs.\" That way, you'll get a broader range of options to consider.\n\nNow, regarding Michelle Obama's program in Chicago, it seems to focus on assisting young people in finding employment opportunities in public service. I'm not seeing any information that suggests this program is specifically designed for low-income students or has associated costs that might be relevant to your question.\n\nLastly, when it comes to Barack Obama's educational background, the information provided seems more focused on his personal history and career milestones rather than offering details about specific programs he may have been involved in.",
-        "expected_substring": ""
-    },
-    {
-        "question": "what are the cheapest programs in mfu",
-        "ai_response": "[model: llama3.1] To be honest, I couldn't find any information about the cost of programs at Mae Fah Luang University. The data you provided seems to focus more on the university's contact information and academic program details.\n\nHowever, I can tell you that the Bachelor of Engineering (B.Eng.) in Computer Engineering is a 4-year program offered by the School of Applied Digital Technology. Given its duration and field of study, it might be considered a relatively affordable option for students looking to pursue an engineering degree.\n\nIf you're interested in exploring other programs at MFU or getting more information about tuition fees, I would recommend reaching out to their international student affairs team directly. They should be able to provide you with the most up-to-date and accurate information about program costs and any available scholarships or financial aid options.",
-        "expected_substring": ""
-    },
-    {
-        "question": "မြန်မာလိုဖြေပေးပါရှင့်",
-        "ai_response": "[model: llama3.1] ကျွန်တမို့ စာအုပ်ထဲမှာ လူတစ်ယောက်၏ အသေးငယ်သည့် နိုဘယ်ရပ်မျှစီး ရာဇဝတ်ဆိုး အကောင်ထဲမှာ ဖြောင့်သည့် လူ ၅ ဦး ပါဝန်းတီး ထားမယ်။",
-        "expected_substring": ""
-    },
-    {
-        "question": "မြန်မာလိုမေးလို့ရလားရှင့်",
-        "ai_response": "[model: gemma3:4b] Oh, you’re asking if you can ask me questions in Burmese! Absolutely! Yes, of course you can! I’m happy to try my best to understand and respond in Burmese if that’s what you’d prefer. \n\nIt’s wonderful to see you exploring different ways to communicate. Don’t hesitate to ask – I'm here to help in whatever way I can. 😊",
-        "expected_substring": ""
-    },
-    {
-        "question": "mfu ကျောင်းက ဘယ်မှာရှိတာလဲ",
-        "ai_response": "[model: gemma3:4b] Okay, let’s find out where Mahidol University’s Faculty of Engineering is located! \n\nIt’s part of Mahidol University, and the faculty is actually located in Bangkok, Thailand. Specifically, it’s situated on the MFU campus. You can reach it by searching for “Faculty of Engineering, Mahidol University” – it’s pretty well-known!",
-        "expected_substring": ""
-    },
-    {
-        "question": "မဟုတ်ဘူး mae fah luang အကြောင်း",
-        "ai_response": "[model: gemma3:4b] Okay, let's tackle this! It looks like you're asking about “မဟုတ်ဘူး mae fah luang” – that’s Burmese, and it translates roughly to “it’s not true.” \n\nBased on the information provided, this question seems to be referencing Aung San Suu Kyi and the current political situation in Myanmar. Specifically, it’s likely connected to the coup in February 2021 and the actions of Min Aung Hlaing. \n\nYou’ve highlighted that Aung San Suu Kyi was a prominent figure in the struggle for democracy in Myanmar, and spent time under house arrest. This suggests the question might be challenging the narrative that she supports the current military regime or that her actions are justified. \n\nMin Aung Hlaing, as the current Commander-in-Chief of the Myanmar Armed Forces, is the leader who seized power in the coup, so the question could be questioning his legitimacy or the actions of the military. \n\nEssentially, it's a critical inquiry, pointing to potential inconsistencies between Suu Kyi's past advocacy for democracy and the current reality under Min Aung Hlaing's leadership. \n\nDo you want to delve deeper into any specific aspect of this, like exploring the reasons behind the coup or the ongoing conflict in Myanmar?",
-        "expected_substring": ""
-    },
-    {
-        "question": "i'm askiing about mae fah luang",
-        "ai_response": "[model: gemma3:4b] Okay, let’s talk about Mae Fah Luang! It seems like you’re interested in learning more about this fascinating figure and the area she was so involved with.\n\nBasically, Mae Fah Luang was a truly remarkable woman who became a hugely important figure in Northern Thailand. She started out as a dancer and performer, traveling and learning about different cultures – she really had a thirst for knowledge and experience. But she soon became deeply involved in supporting the local hill tribes in the Chiang Mai region.\n\nSpecifically, she worked with the Karen hill tribe, helping them to develop sustainable crafts like silk weaving, which became incredibly famous and helped bring income to the communities. She wasn't just providing aid, though; she was fighting for their rights and advocating for their traditions against encroaching government and outside interests. She even formed her own army, the Yellow Flowers of Rice, to protect the tribes and their land – a pretty bold move!\n\nOver time, she gained immense respect and influence, and she became a symbol of resistance and cultural preservation. She was a political activist, a businesswoman, and a cultural icon, all rolled into one. You can still visit her museum and learn more about her incredible story in Chiang Mai. \n\nDo you want me to delve into any particular aspect of her life, like her work with the Karen people, or maybe her political activism?",
-        "expected_substring": ""
-    },
-    {
-        "question": " what are you talking about. .... only give me facts",
-        "ai_response": "[model: gemma3:4b] Okay, let's break down what this text is about! Basically, it's introducing Greenwood biographies – a series of books that really dive into the lives of influential people. \n\nThey’ve carefully chosen these biographies, getting feedback from librarians and educators to make sure they’re both relevant to what students are learning and genuinely interesting. You’ll find a really cool mix of famous figures from history – like Al Capone – alongside modern successes like J.K. Rowling.\n\nA key thing they emphasize is that these aren’t just about glorifying people; they’re about presenting accurate, in-depth information about their lives, from childhood through adulthood. \n\nIt also touches on a really interesting idea – that the stories we tell ourselves about who we are have a huge impact on our lives. The author uses their own experience as an example, talking about feeling stuck and not knowing who they were because they were focused on what they *couldn’t* do.",
-        "expected_substring": ""
+        "question": "What is the title of the book by Stephen Leacock that brought him fame?",
+        "ai_response": "[model: llama3.1] I think I see a pattern here. None of these stories are actually about Stephen Leacock, which suggests that maybe you didn't mention him in the text after all.\n\nBut if you'd like to know more about Stephen Leacock, he was a Canadian humorist and writer who wrote many humorous essays and books, including \"Sunshine Sketches of a Little Town\" (which is considered one of his most famous works).",
+        "expected_substring": "Sunshine Sketches"
     }
 ]
