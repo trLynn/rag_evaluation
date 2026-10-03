@@ -9,7 +9,7 @@ def setup_langsmith(project_name: str = "rag_evaluation"):
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
     # Set your key via environment variable or fill in default
     if "LANGCHAIN_API_KEY" not in os.environ:
-        os.environ["LANGCHAIN_API_KEY"] = "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"
+        os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
     os.environ["LANGCHAIN_PROJECT"] = project_name
 
 # --- 2. GRAPH STATE DEFINITION ---
