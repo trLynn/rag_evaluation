@@ -1,15 +1,17 @@
-"""CLI ingestion entrypoint + Streamlit UI entrypoint."""
+"""CLI ingestion entrypoint + Streamlit UI entrypoint (LangGraph + LangSmith Enabled)."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 from pathlib import Path
 
 import streamlit as st
 
 from src.ingestion import ingest_documents
+from src.graph_retrieval import AdaptiveRAGGraphEngine
 from src.retrieval import answer_question
 
 DOCS_DIR = Path("docs")
@@ -17,6 +19,14 @@ PERSIST_DIR = "vector_db"
 COLLECTION_NAME = "knowledge_base"
 EMBEDDING_MODEL = "nomic-embed-text"
 LLM_MODEL = "llama3.1"
+CHAT_LOG_FILE = Path("chat_logs.json")
+
+
+def setup_langsmith_tracing():
+    """Ensure LangSmith environment variables are set for tracing."""
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    if "LANGCHAIN_PROJECT" not in os.environ:
+        os.environ["LANGCHAIN_PROJECT"] = "CraftGPT-Evaluation"
 
 
 def get_local_ollama_models() -> list[str]:
@@ -35,7 +45,6 @@ def get_local_ollama_models() -> list[str]:
     if LLM_MODEL not in models:
         models.insert(0, LLM_MODEL)
 
-    # Keep order stable while removing duplicates
     return list(dict.fromkeys(models))
 
 
@@ -50,7 +59,9 @@ def _render_model_toolbar(local_models: list[str]) -> str:
     """Render a compact model control row near chat input."""
     toolbar_col, model_col = st.columns([4, 2])
     with toolbar_col:
-        st.caption(f"Active model: `{st.session_state['selected_llm_model']}`")
+        st.caption(
+            f"Active model: `{st.session_state['selected_llm_model']}` | Tracing: **LangSmith Active**"
+        )
     with model_col:
         st.selectbox(
             "Model",
@@ -61,7 +72,6 @@ def _render_model_toolbar(local_models: list[str]) -> str:
             label_visibility="collapsed",
         )
     return st.session_state["selected_llm_model"]
-CHAT_LOG_FILE = Path("chat_logs.json")
 
 
 def get_all_files() -> list[str]:
@@ -144,7 +154,11 @@ def _is_running_in_streamlit() -> bool:
         return False
 
 
-def log_chat_history(question: str, ai_response: str, log_file: Path = CHAT_LOG_FILE) -> None:
+def log_chat_history(
+    question: str,
+    ai_response: str,
+    log_file: Path = CHAT_LOG_FILE,
+) -> None:
     log_entry = {
         "question": question,
         "ai_response": ai_response,
@@ -153,289 +167,160 @@ def log_chat_history(question: str, ai_response: str, log_file: Path = CHAT_LOG_
 
     logs: list[dict[str, str]] = []
     if log_file.exists():
-        logs = json.loads(log_file.read_text(encoding="utf-8"))
+        try:
+            stored_logs = json.loads(log_file.read_text(encoding="utf-8"))
+            if isinstance(stored_logs, list):
+                logs = stored_logs
+        except (json.JSONDecodeError, OSError):
+            logs = []
 
     logs.append(log_entry)
-    log_file.write_text(json.dumps(logs, indent=4, ensure_ascii=False), encoding="utf-8")
+    log_file.write_text(
+        json.dumps(logs, indent=4, ensure_ascii=False),
+        encoding="utf-8",
+    )
 
 
 def run_streamlit_app() -> None:
+    setup_langsmith_tracing()
     st.set_page_config(page_title="CraftGPT", layout="wide", page_icon="✦")
 
     st.markdown(
         """
         <style>
             @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap');
-
-            /* ── Base reset ── */
-            html, body, [class*="css"] {
-                font-family: 'DM Sans', sans-serif;
-            }
-
-            /* ── Page background ── */
-            .stApp {
-                background-color: #F7F5F0;
-            }
-            [data-testid="stAppViewContainer"] {
-                background-color: #F7F5F0;
-            }
-            [data-testid="stHeader"] {
-                background: transparent;
-            }
-
-            /* ── Hide Streamlit chrome ── */
-            #MainMenu, footer, [data-testid="stToolbar"] {
-                display: none !important;
-            }
-
-            /* ── Hero section ── */
-            .hero-wrap {
-                max-width: 680px;
-                margin: clamp(3rem, 14vh, 9rem) auto 0 auto;
-                text-align: center;
-                padding: 0 1.25rem;
-            }
-            .hero-eyebrow {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 11px;
-                font-weight: 500;
-                letter-spacing: 0.12em;
-                text-transform: uppercase;
-                color: #9A8F7E;
-                margin-bottom: 1.25rem;
-            }
-            .hero-dot {
-                width: 5px;
-                height: 5px;
-                border-radius: 50%;
-                background: #C8B99A;
-                display: inline-block;
-            }
-            .hero-title {
-                font-family: 'DM Serif Display', Georgia, serif;
-                font-size: clamp(2.2rem, 5vw, 3rem);
-                font-weight: 400;
-                color: #1C1A16;
-                line-height: 1.15;
-                margin-bottom: 0.85rem;
-                letter-spacing: -0.02em;
-            }
-            .hero-title em {
-                font-style: italic;
-                color: #7C6A52;
-            }
-            .hero-sub {
-                font-size: 1rem;
-                font-weight: 300;
-                color: #6B6358;
-                line-height: 1.65;
-                max-width: 440px;
-                margin: 0 auto 0 auto;
-            }
-
-            /* ── Example pills ── */
-            .examples-wrap {
-                max-width: 680px;
-                margin: 1.75rem auto 0 auto;
-                padding: 0 1.25rem;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 0.45rem;
-                justify-content: center;
-            }
-            .pill {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 0.42rem 0.85rem;
-                border: 1px solid #DDD8CF;
-                border-radius: 999px;
-                color: #5C5549;
-                font-size: 0.82rem;
-                font-weight: 400;
-                background: #FDFCF9;
-                transition: background 0.15s, border-color 0.15s;
-                cursor: default;
-            }
-            .pill:hover {
-                background: #F2EDE4;
-                border-color: #C8B99A;
-            }
-            .pill-icon {
-                font-size: 13px;
-                opacity: 0.7;
-            }
-
-            /* ── Chat input override ── */
-            [data-testid="stChatInput"] {
-                max-width: 680px;
-                margin: 2rem auto 0 auto;
-                background: #FDFCF9;
-                border-radius: 14px !important;
-                border: 1px solid #DDD8CF !important;
-                box-shadow: 0 2px 12px rgba(0,0,0,0.05) !important;
-                padding: 0.25rem 0.5rem !important;
-            }
-            [data-testid="stChatInput"]:focus-within {
-                border-color: #A69580 !important;
-                box-shadow: 0 0 0 3px rgba(166,149,128,0.15), 0 2px 12px rgba(0,0,0,0.05) !important;
-            }
-            [data-testid="stChatInput"] textarea {
-                font-family: 'DM Sans', sans-serif !important;
-                font-size: 0.95rem !important;
-                color: #1C1A16 !important;
-                background: transparent !important;
-            }
-            [data-testid="stChatInput"] textarea::placeholder {
-                color: #A09489 !important;
-            }
-
-            /* ── Chat messages ── */
-            [data-testid="stChatMessageContainer"] {
-                max-width: 680px;
-                margin: 0 auto;
-                padding: 0.75rem 1.25rem;
-            }
-            [data-testid="stChatMessage"] {
-                background: transparent !important;
-                border: none !important;
-                padding: 0.65rem 0 !important;
-            }
-
-            /* User bubble */
-            [data-testid="stChatMessage"][data-testid*="user"] .stMarkdown,
-            div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) .stMarkdown p {
-                background: #EDE8DF;
-                border-radius: 14px 14px 4px 14px;
-                padding: 0.7rem 1rem;
-                color: #1C1A16;
-                font-size: 0.93rem;
-                line-height: 1.6;
-                display: inline-block;
-                max-width: 88%;
-                float: right;
-            }
-
-            /* Assistant bubble */
-            div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) .stMarkdown p {
-                background: #FDFCF9;
-                border: 1px solid #E3DDD5;
-                border-radius: 4px 14px 14px 14px;
-                padding: 0.7rem 1rem;
-                color: #2A2720;
-                font-size: 0.93rem;
-                line-height: 1.7;
-            }
-
-            /* Avatar icons */
-            [data-testid="chatAvatarIcon-user"] {
-                background: #C8B99A !important;
-                color: #3D3428 !important;
-            }
-            [data-testid="chatAvatarIcon-assistant"] {
-                background: #1C1A16 !important;
-                color: #F7F5F0 !important;
-            }
-
-            /* ── Spinner ── */
-            [data-testid="stSpinner"] > div {
-                color: #7C6A52;
-                font-size: 0.85rem;
-            }
-
-            /* ── Divider between hero and chat ── */
-            .chat-divider {
-                max-width: 680px;
-                margin: 2.5rem auto 0 auto;
-                border: none;
-                border-top: 1px solid #E3DDD5;
-            }
-
-            /* ── Responsive ── */
-            @media (max-width: 640px) {
-                .hero-wrap, .examples-wrap {
-                    text-align: left;
-                    justify-content: flex-start;
-                }
-                .hero-title {
-                    font-size: 1.9rem;
-                }
-                .pill {
-                    font-size: 0.8rem;
-                }
-            }
+            html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
+            .stApp, [data-testid="stAppViewContainer"] { background-color: #F7F5F0; }
+            [data-testid="stHeader"] { background: transparent; }
+            #MainMenu, footer, [data-testid="stToolbar"] { display: none !important; }
+            .hero-wrap { max-width: 680px; margin: clamp(3rem, 14vh, 9rem) auto 0 auto; text-align: center; padding: 0 1.25rem; }
+            .hero-eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #9A8F7E; margin-bottom: 1.25rem; }
+            .hero-dot { width: 5px; height: 5px; border-radius: 50%; background: #C8B99A; display: inline-block; }
+            .hero-title { font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3rem); font-weight: 400; color: #1C1A16; line-height: 1.15; margin-bottom: 0.85rem; letter-spacing: -0.02em; }
+            .hero-title em { font-style: italic; color: #7C6A52; }
+            .hero-sub { font-size: 1rem; font-weight: 300; color: #6B6358; line-height: 1.65; max-width: 440px; margin: 0 auto; }
+            .chat-divider { max-width: 680px; margin: 2.5rem auto 0 auto; border: none; border-top: 1px solid #E3DDD5; }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    # ── Hero ──────────────────────────────────────────────
-    st.markdown(
-        """
-        <div class="hero-wrap">
-            <div class="hero-eyebrow">
-                <span class="hero-dot"></span>
-                CraftGPT &nbsp;·&nbsp; Document Intelligence
-                <span class="hero-dot"></span>
+    # Render Hero only if chat history is empty
+    if not st.session_state.get("messages"):
+        st.markdown(
+            """
+            <div class="hero-wrap">
+                <div class="hero-eyebrow">
+                    <span class="hero-dot"></span> CraftGPT &nbsp;·&nbsp; LangGraph + LangSmith <span class="hero-dot"></span>
+                </div>
+                <div class="hero-title">Ask anything about<br><em>your documents</em></div>
+                <div class="hero-sub">Adaptive document intelligence powered by state-graph agent loops.</div>
             </div>
-            <div class="hero-title">Ask anything about<br><em>your documents</em></div>
-            <div class="hero-sub">
-                Search, summarise, and extract insights from your indexed knowledge base — instantly.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # ── Example pills ──────────────────────────────────────
-    st.markdown(
-        """
-        <div class="examples-wrap">
-            <span class="pill"><span class="pill-icon">◎</span> Summarise the uploaded policy doc</span>
-            <span class="pill"><span class="pill-icon">◎</span> Find where cancellation terms are defined</span>
-            <span class="pill"><span class="pill-icon">◎</span> List key numbers from the report</span>
-            <span class="pill"><span class="pill-icon">◎</span> Compare two sections</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
 
     local_models = get_local_ollama_models()
     _init_chat_state(default_model=local_models[0])
     if st.session_state["selected_llm_model"] not in local_models:
         local_models.insert(0, st.session_state["selected_llm_model"])
 
-    # ── Model toolbar + chat input ────────────────────────
-    selected_model = _render_model_toolbar(local_models=local_models)
-    prompt = st.chat_input("Ask anything about your documents…")
-
-    if prompt:
-        st.session_state["messages"].append({"role": "user", "content": prompt})
-        with st.spinner("Thinking…"):
-            result = answer_question(
-                question=prompt,
-                llm_model=selected_model,
-                top_k=3,
-                persist_dir=PERSIST_DIR,
-                collection_name=COLLECTION_NAME,
-                embedding_model=EMBEDDING_MODEL,
-            )
-        answer_text = result.get("answer", "")
-        model_used = result.get("model_used", selected_model)
-        st.session_state["messages"].append({"role": "assistant", "content": answer_text})
-        log_chat_history(
-            question=prompt,
-            ai_response=f"[model: {model_used}] {answer_text}",
-        )
-
-    # ── Render conversation ────────────────────────────────
+    # Render chat history
     if st.session_state["messages"]:
         st.markdown('<hr class="chat-divider">', unsafe_allow_html=True)
         for message in st.session_state["messages"]:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
+                if message["role"] == "assistant" and "docs" in message and message["docs"]:
+                    with st.expander("🔍 LangGraph Trace Details"):
+                        st.write(f"**Final Query Used:** `{message.get('rephrased')}`")
+                        st.write("**Retrieved Documents:**")
+                        for idx, doc in enumerate(message["docs"]):
+                            st.info(f"**Chunk {idx+1}:** {doc}")
+
+    selected_model = _render_model_toolbar(local_models=local_models)
+    prompt = st.chat_input("Ask anything about your documents…")
+
+    if not prompt:
+        return
+
+    st.session_state["messages"].append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant"):
+        docs = []
+        rephrased = prompt
+        try:
+            with st.spinner("Executing LangGraph State Machine…"):
+                engine = AdaptiveRAGGraphEngine(
+                    persist_dir=PERSIST_DIR,
+                    collection_name=COLLECTION_NAME,
+                    embedding_model=EMBEDDING_MODEL,
+                    llm_model=selected_model,
+                )
+                graph_result = engine.run(prompt)
+                answer_text = graph_result.get("answer")
+                model_used = graph_result.get("model_used", selected_model)
+                docs = graph_result.get("documents", [])
+                rephrased = graph_result.get("final_query", prompt)
+
+                # Fall back to base retrieval chain if graph generation returned empty
+                if not answer_text:
+                    fallback = answer_question(
+                        question=prompt,
+                        llm_model=selected_model,
+                        top_k=3,
+                        persist_dir=PERSIST_DIR,
+                        collection_name=COLLECTION_NAME,
+                        embedding_model=EMBEDDING_MODEL,
+                    )
+                    answer_text = fallback.get("answer", "I couldn't find an answer in the indexed documents.")
+                    model_used = fallback.get("model_used", selected_model)
+
+        except Exception as graph_error:
+            # Fallback execution in case LangGraph encounters an error
+            try:
+                fallback = answer_question(
+                    question=prompt,
+                    llm_model=selected_model,
+                    top_k=3,
+                    persist_dir=PERSIST_DIR,
+                    collection_name=COLLECTION_NAME,
+                    embedding_model=EMBEDDING_MODEL,
+                )
+                answer_text = fallback.get("answer", "I couldn't find an answer in the indexed documents.")
+                model_used = fallback.get("model_used", selected_model)
+            except Exception as error:
+                answer_text = (
+                    "I couldn't process that request. Please confirm Ollama is running "
+                    "and your documents have been indexed."
+                )
+                model_used = selected_model
+                st.error(f"Request failed: {error}")
+
+        st.markdown(answer_text)
+        if docs:
+            with st.expander("🔍 LangGraph Trace Details"):
+                st.write(f"**Final Query Used:** `{rephrased}`")
+                st.write("**Retrieved Documents:**")
+                for idx, doc in enumerate(docs):
+                    st.info(f"**Chunk {idx+1}:** {doc}")
+
+    st.session_state["messages"].append({
+        "role": "assistant",
+        "content": answer_text,
+        "docs": docs,
+        "rephrased": rephrased,
+    })
+
+    try:
+        log_chat_history(
+            question=prompt,
+            ai_response=f"[model: {model_used}] {answer_text}",
+        )
+    except OSError:
+        pass
 
 
 def main() -> None:

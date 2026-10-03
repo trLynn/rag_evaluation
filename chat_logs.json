@@ -118,5 +118,10 @@
         "question": "What is the title of the book by Stephen Leacock that brought him fame?",
         "ai_response": "[model: llama3.1] I think I see a pattern here. None of these stories are actually about Stephen Leacock, which suggests that maybe you didn't mention him in the text after all.\n\nBut if you'd like to know more about Stephen Leacock, he was a Canadian humorist and writer who wrote many humorous essays and books, including \"Sunshine Sketches of a Little Town\" (which is considered one of his most famous works).",
         "expected_substring": "Sunshine Sketches"
+    },
+    {
+        "question": "Hi",
+        "ai_response": "[model: llama3.1] It's so great to see you! I couldn't help but notice the inspiring dedication and the amazing stories of the people featured in this book. Beatrice Biira's story, in particular, really caught my attention - it's incredible how one person's life can be transformed by access to education, and how she's now making a difference in the lives of others. And then there's Michaelle Jean, who's using her platform to help those in need, particularly in Haiti. Their stories are truly a reminder of the impact one person can have on the world. What brings you here today?",
+        "expected_substring": ""
     }
 ]
